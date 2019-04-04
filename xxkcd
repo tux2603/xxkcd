@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+
+#Get file paths
+my $configFolder = $ENV{"HOME"} . "/.xxkcd";
+my $configFile = $configFolder . "/conf";
+my $comicFileBase = $configFolder. "/comic";
+my $comicNum = shift;
+$comicNum .= "/" if $comicNum;
+
+#Scrape xkcd
+my $xkcdStuff = `curl https://xkcd.com/$comicNum`;
+
+#Regex extraction of the comic file path
+$xkcdStuff =~ m#(https://imgs\.xkcd\.com/comics/[^\s]*)# or die `xcowsay --image /usr/share/xxkcd/blackhat.png "Huh.  There's no picture there."`;
+my $comicURL = $1;
+
+#Get the title text. Probably my craziest regular expression yet.
+$xkcdStuff =~ m#<img src=".*?".*?title=(["'])((?:[^\1]|\\(?:\\\\)*\1)*?)\1# or die `xcowsay --image /usr/share/xxkcd/blackhat.png "Umm... I couldn't find any title text"`;
+my $titleText = $2;
+print $titleText;
+
+#Make the configuration directory if it doesn't already exist
+mkdir $configFolder unless -e $configFolder;
+
+#Create the config file if it doesn't already exist
+unless( -e $configFile ) {
+	open CONFIG_FILE, ">", $configFile;
+	print CONFIG_FILE "NONE";
+	close CONFIG_FILE;
+}
+
+#Open the config file for reading
+open CONFIG_FILE, "<", $configFile;
+chomp(my $lastComic = <CONFIG_FILE>);
+close CONFIG_FILE;
+
+#Download the new comic
+unless($comicURL eq $lastComic && $comicNum != 1335) {
+	print "Downloading latest comic...\n";
+	system "wget", "-O" => "$comicFileBase", "$comicURL";\
+	open CONFIG_FILE, ">", $configFile;
+	print CONFIG_FILE $comicURL;
+	close CONFIG_FILE;
+}
+
+#Show the comic
+`xcowsay --image /usr/share/xxkcd/blackhat.png -d $comicFileBase `;
+`xcowsay --image /usr/share/xxkcd/blackhat.png "$titleText"`;
