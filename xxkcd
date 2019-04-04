@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 
+#More-or-less constaint values...
+my $imagePath = '/usr/share/games/xxkcd';
+my $blackhat = "--image $imagePath/blackhat.png";
+
 #Get file paths
 my $configFolder = $ENV{"HOME"} . "/.xxkcd";
 my $configFile = $configFolder . "/conf";
@@ -10,12 +14,26 @@ $comicNum .= "/" if $comicNum;
 #Scrape xkcd
 my $xkcdStuff = `curl https://xkcd.com/$comicNum`;
 
+#If the balckhat image isn't installed, use the one in the repo
+unless ( -e $blackhat) {
+	print "Blackhat image isn't installed. Using a local version\n";
+	
+	if ( -e 'blackhat.png' ) {
+        $blackhat = '--image blackhat.png';
+    }
+
+    else {
+        print "Couldn't find black hat. You get a cow.\n";
+        $blackhat = '';
+    }
+}
+
 #Regex extraction of the comic file path
-$xkcdStuff =~ m#(https://imgs\.xkcd\.com/comics/[^\s]*)# or die `xcowsay --image /usr/share/xxkcd/blackhat.png "Huh.  There's no picture there."`;
+$xkcdStuff =~ m#(https://imgs\.xkcd\.com/comics/[^\s]*)# or die `xcowsay $blackhat "Huh.  There's no picture there."`;
 my $comicURL = $1;
 
 #Get the title text. Probably my craziest regular expression yet.
-$xkcdStuff =~ m#<img src=".*?".*?title=(["'])((?:[^\1]|\\(?:\\\\)*\1)*?)\1# or die `xcowsay --image /usr/share/xxkcd/blackhat.png "Umm... I couldn't find any title text"`;
+$xkcdStuff =~ m#<img src=".*?".*?title=(["'])((?:[^\1]|\\(?:\\\\)*\1)*?)\1# or die `xcowsay $blackhat "Umm... I couldn't find any title text"`;
 my $titleText = $2;
 print $titleText;
 
@@ -44,5 +62,6 @@ unless($comicURL eq $lastComic && $comicNum != 1335) {
 }
 
 #Show the comic
-`xcowsay --image /usr/share/xxkcd/blackhat.png -d $comicFileBase `;
-`xcowsay --image /usr/share/xxkcd/blackhat.png "$titleText"`;
+`xcowsay $blackhat -d $comicFileBase `;
+`xcowsay $blackhat "$titleText"`;
+
