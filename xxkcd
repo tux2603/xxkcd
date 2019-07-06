@@ -2,7 +2,7 @@
 
 #More-or-less constaint values...
 my $imagePath = '/usr/share/games/xxkcd';
-my $blackhat = "--image $imagePath/blackhat.png";
+my $displayImage = '';
 
 #Get file paths
 my $configFolder = $ENV{"HOME"} . "/.xxkcd";
@@ -14,26 +14,31 @@ $comicNum .= "/" if $comicNum;
 #Scrape xkcd
 my $xkcdStuff = `curl https://xkcd.com/$comicNum`;
 
-#If the balckhat image isn't installed, use the one in the repo
-unless ( -e $blackhat) {
-	print "Blackhat image isn't installed. Using a local version\n";
-	
-	if ( -e 'blackhat.png' ) {
-        $blackhat = '--image blackhat.png';
-    }
 
-    else {
-        print "Couldn't find black hat. You get a cow.\n";
-        $blackhat = '';
-    }
+#  If the black hat image is installed, use it as the display image
+if ( -e "$imagePath/blackhat.png" ) {
+	$displayImage = "--image $imagePath/blackhat.png";
+}
+
+# Else, try to use a local version of blackhat
+elsif ( -e 'blackhat.png' ) {
+	print "Blackhat image isn't installed. Using a local version\n";
+	$blackhat = '--image blackhat.png';
+	$displayImage = "--image lackhat.png";
+}
+
+else {
+	print "Couldn't find black hat. You get a cow.\n";
+	$displayImage = '';
 }
 
 #Regex extraction of the comic file path
-$xkcdStuff =~ m#(https://imgs\.xkcd\.com/comics/[^\s]*)# or die `xcowsay $blackhat "Huh.  There's no picture there."`;
-my $comicURL = $1;
+$xkcdStuff =~ m#(?<=src=")(//imgs\.xkcd\.com/comics/[^\s"]*)(?=")# or die `xcowsay $displayImage "Huh.  There's no picture there."`;
+my $comicURL = "https:" . $1;
+print "$comicURL\n";
 
 #Get the title text. Probably my craziest regular expression yet.
-$xkcdStuff =~ m#<img src=".*?".*?title=(["'])((?:[^\1]|\\(?:\\\\)*\1)*?)\1# or die `xcowsay $blackhat "Umm... I couldn't find any title text"`;
+$xkcdStuff =~ m#<img src=".*?".*?title=(["'])((?:[^\1]|\\(?:\\\\)*\1)*?)\1# or die `xcowsay $displayImage "Umm... I couldn't find any title text"`;
 my $titleText = $2;
 print $titleText;
 
@@ -62,6 +67,6 @@ unless($comicURL eq $lastComic && $comicNum != 1335) {
 }
 
 #Show the comic
-`xcowsay $blackhat -d $comicFileBase `;
-`xcowsay $blackhat "$titleText"`;
+`xcowsay $displayImage -d $comicFileBase `;
+`xcowsay $displayImage "$titleText"`;
 
