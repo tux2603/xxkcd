@@ -29,7 +29,7 @@ unless ( -e $blackhat) {
 }
 
 #Regex extraction of the comic file path
-$xkcdStuff =~ m#(https://imgs\.xkcd\.com/comics/[^\s]*)# or die `xcowsay $blackhat "Huh.  There's no picture there."`;
+$xkcdStuff =~ m#((?<=embedding\): )https://imgs\.xkcd\.com/comics/[^\s]*\.(jpg|png|gif))#i or die `xcowsay $blackhat "Huh.  There's no picture there."`;
 my $comicURL = $1;
 
 #Get the title text. Probably my craziest regular expression yet.
